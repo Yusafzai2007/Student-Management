@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apierror.js";
 import { ApiResponse } from "../utils/apiresponse.js";
 import { student } from "../models/student.model.js";
 import { uploadimg } from "../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
 // import mongoose from "mongoose";
 
 const generateaccesstoken = async (userId) => {
@@ -277,6 +278,50 @@ const adminstudent = asynchandler(async (req, res) => {
     );
 });
 
+const refrehtoken = asynchandler(async (req, res) => {
+  const incomingrefrehtoken =
+    req.cookies.isrefreshtoken || req.body.isrefreshtoken;
+
+  if (!incomingrefrehtoken) {
+    throw new ApiError(401, "unauthorized request");
+  }
+
+  let decodetoken;
+  try {
+    decodetoken = jwt.verify(
+      incomingrefrehtoken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+  } catch (err) {
+    throw new ApiError(401, "Invalid or expired refresh token");
+  }
+
+  const user = await singup.findById(decodetoken._id).select("-password");
+  if (!user) {
+    throw new ApiError(401, "unauthorized request data");
+  }
+
+  const option = {
+    httpOnly: true,
+    secure: false, // local testing me false rakho
+  };
+
+  // sirf naya access token generate karo
+  const isaccesstoken = user.isaccesstoken();
+
+  return res
+    .status(200)
+    .cookie("isaccesstoken", isaccesstoken, option)
+    .json(
+      new ApiResponse(
+        200,
+        { isaccesstoken, user }, // 👈 user ka data bhi send kar diya
+        "Access token refreshed successfully"
+      )
+    );
+});
+
+
 export {
   singupdata,
   loggedinuser,
@@ -288,4 +333,5 @@ export {
   deleteUser,
   adminstudent,
   deletestudent,
+  refrehtoken,
 };
