@@ -2,13 +2,13 @@ import { asynchandler } from "../utils/asynchandler.js";
 import { singup } from "../models/singup.model.js";
 import { ApiError } from "../utils/apierror.js";
 import jwt from "jsonwebtoken";
-const jwtverify = asynchandler(async (req, _, next) => {
+const jwtverify = asynchandler(async (req, res, next) => {
   try {
     const token =
       req.cookies?.isaccesstoken ||
       req.header("Authorization")?.replace("Bearer ", " ");
     if (!token) {
-      throw new ApiError(401, "unauthorizes request");
+      res.json( new ApiError(406, "unauthorizes request"))
     }
 
     const decodetoken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -23,7 +23,7 @@ const jwtverify = asynchandler(async (req, _, next) => {
     req.user = user;
     next();
   } catch (error) {
-    throw new ApiError(401, error?.message || "invalid acces token");
+    res.json( new ApiError(401, error?.message || "invalid acces token"));
   }
 });
 

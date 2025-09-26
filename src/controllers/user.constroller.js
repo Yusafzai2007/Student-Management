@@ -95,7 +95,7 @@ const loggedinuser = asynchandler(async (req, res) => {
 
   res
     .status(200)
-    .cookie("isaccesstoken", isaccesstoken, option)
+    .cookie("isaccesstoken", isaccesstoken, (option.httpOnly = false))
     .cookie("isrefreshtoken", isrefreshtoken, option)
     .json(
       new ApiResponse(
@@ -208,7 +208,7 @@ const updatestudent = asynchandler(async (req, res) => {
   }
 
   if (!studentData) {
-    throw new ApiError(404, "Student not found or not authorized");
+    res.json(new ApiError(404, "Student not found or not authorized"))
   }
 
   // Data update karo
@@ -309,18 +309,14 @@ const refrehtoken = asynchandler(async (req, res) => {
   // sirf naya access token generate karo
   const isaccesstoken = user.isaccesstoken();
 
-  return res
-    .status(200)
-    .cookie("isaccesstoken", isaccesstoken, option)
-    .json(
-      new ApiResponse(
-        200,
-        { isaccesstoken, user }, // 👈 user ka data bhi send kar diya
-        "Access token refreshed successfully"
-      )
-    );
+  return res.status(200).cookie("isaccesstoken", isaccesstoken, option).json(
+    new ApiResponse(
+      200,
+      { isaccesstoken, user }, // 👈 user ka data bhi send kar diya
+      "Access token refreshed successfully"
+    )
+  );
 });
-
 
 export {
   singupdata,
